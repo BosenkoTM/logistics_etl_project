@@ -1,0 +1,32 @@
+name: Logistics ETL CI with Clean Up
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test-and-clean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          echo "Building Logistics ETL image..."
+          docker build -t logistics-etl:ci-test .
+
+      - name: Run Tests in Container
+        run: |
+          echo "Running tests..."
+          docker run --name etl-test-runner logistics-etl:ci-test
+
+      - name: Quality Gate - Clean Up Resources
+        if: always()
+        run: |
+          echo "Running Clean Up Quality Gate..."
+          docker rm -f etl-test-runner || true
+          docker rmi -f logistics-etl:ci-test || true
+          docker system prune -f
+          echo "Clean Up complete. Disk space reclaimed."
