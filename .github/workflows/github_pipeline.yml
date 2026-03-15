@@ -1,0 +1,30 @@
+name: GitHub Logistics ETL CI
+
+on: 
+  push:
+    branches: [ main ]
+
+jobs:
+  build-test-clean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          echo "Building on GitHub VM..."
+          docker build -t logistics-etl:ci-test .
+
+      - name: Run Pytest
+        run: docker run --name etl-test-runner logistics-etl:ci-test
+
+      - name: Quality Gate - Clean Up
+        # Гарантированное выполнение очистки
+        if: always()
+        run: |
+          echo "Running Clean Up on GitHub..."
+          docker rm -f etl-test-runner || true
+          docker rmi -f logistics-etl:ci-test || true
+          docker system prune -f
+          echo "GitHub Runner disk space reclaimed."
