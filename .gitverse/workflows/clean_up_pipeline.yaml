@@ -12,6 +12,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Init and Start Docker Daemon
+        # Этот шаг попытается запустить Docker в облаке GitVerse
+        run: |
+          echo "Attempting to start Docker..."
+          sudo apt-get update -y || true
+          sudo apt-get install docker.io -y || true
+          sudo systemctl start docker || sudo service docker start || true
+          docker info || echo "Docker failed to start"
+
       - name: Build Docker Image
         run: |
           echo "Building Logistics ETL image..."
